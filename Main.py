@@ -12,6 +12,7 @@ pygame.mixer.music.play(-1, 0)
 dog_images = []
 left_images = []
 right_images = []
+attack_images = []
 
 left1 = pygame.image.load('moving/good/left1.png')
 left2 = pygame.image.load('moving/good/left2.png')
@@ -23,15 +24,23 @@ right2 = pygame.image.load('moving/good/right2.png')
 right1 = pygame.transform.scale(right1, (135, 115))
 right2 = pygame.transform.scale(right2, (135, 115))
 
+attack1 = pygame.image.load('attack/attack1.png')
+attack2 = pygame.image.load('attack/attack1.png')
+attack1 = pygame.transform.scale(attack1, (137, 142))
+attack2 = pygame.transform.scale(attack2, (137, 142))
+
 map = pygame.image.load('boss battle.png')
 
 left_images.append(left1)
 left_images.append(left2)
 right_images.append(right1)
 right_images.append(right2)
+attack_images.append(attack1)
+attack_images.append(attack2)
 
 dog_images.append(left_images)
 dog_images.append(right_images)
+dog_images.append(attack_images)
 
 face = 0
 index = 0
@@ -55,6 +64,7 @@ clock = pygame.time.Clock()
 
 # variables for which side the dog is facing
 moveUp = moveDown = moveRight = moveLeft = False
+attack = False
 
 while keepPlaying:
     for event in pygame.event.get():
@@ -80,6 +90,9 @@ while keepPlaying:
                 moveDown = True
                 moveUp = moveRight = moveLeft = False
                 y_change += movement_speed
+            if event.key == pygame.K_SPACE:
+                attack = True
+                face = 2
             
 
         elif event.type == pygame.KEYUP:
@@ -95,16 +108,25 @@ while keepPlaying:
             if event.key == pygame.K_DOWN:
                 y_change = 0
                 moveDown = False
+            if event.key == pygame.K_SPACE:
+                attack = False
+                face = 0
+
     if (index == 19):
         index = 0
     else:
         if (moveLeft or moveRight or moveUp or moveDown):
             index += 1
+
     dog = dog_images[face][index//10]
-    rect.move_ip(x_change, y_change)
+    if (not attack):
+        rect.move_ip(x_change, y_change)
     rect.clamp_ip(game_border)
     gameDisplay.blit(map, (0, 0))
-    gameDisplay.blit(dog, rect)
+    if (attack):
+        gameDisplay.blit(dog, (rect.x, rect.y-30))
+    else:
+        gameDisplay.blit(dog, rect)
     pygame.display.update()
     clock.tick(60)
 
