@@ -1,6 +1,8 @@
 import pygame
 import os
 
+from Player import Player
+
 # sets basic game features
 os.environ['SDL_VIDEO_CENTERED'] = '1'
 pygame.init()
@@ -9,6 +11,9 @@ pygame.init()
 pygame.mixer.music.load("The Marching Pirate Spy.mp3")
 pygame.mixer.music.play(-1, 0)
 
+# initialize player
+player = Player(135, 115, 5, 0)
+
 dog_images = []
 left_images = []
 right_images = []
@@ -16,18 +21,18 @@ attack_images = []
 
 left1 = pygame.image.load('moving/good/left1.png')
 left2 = pygame.image.load('moving/good/left2.png')
-left1 = pygame.transform.scale(left1, (135, 115))
-left2 = pygame.transform.scale(left2, (135, 115))
+left1 = pygame.transform.scale(left1, (player.get_width(), player.get_height()))
+left2 = pygame.transform.scale(left2, (player.get_width(), player.get_height()))
 
 right1 = pygame.image.load('moving/good/right1.png')
 right2 = pygame.image.load('moving/good/right2.png')
-right1 = pygame.transform.scale(right1, (135, 115))
-right2 = pygame.transform.scale(right2, (135, 115))
+right1 = pygame.transform.scale(right1, (player.get_width(), player.get_height()))
+right2 = pygame.transform.scale(right2, (player.get_width(), player.get_height()))
 
 attack1 = pygame.image.load('attack/attack1.png')
 attack2 = pygame.image.load('attack/attack1.png')
 attack1 = pygame.transform.scale(attack1, (137, 142))
-attack2 = pygame.transform.scale(attack2, (137, 142))
+attack2 = pygame.transform.flip(pygame.transform.scale(attack2, (137, 142)), False, True)
 
 map = pygame.image.load('boss battle.png')
 
@@ -55,8 +60,7 @@ game_border = (0, 108, 800, 415)
 movement_speed = 5
 x_change = 0
 y_change = 0
-
-rect = dog[0].get_rect()
+player.set_rect(dog[0].get_rect())
 
 # beginning game features
 keepPlaying = True
@@ -71,62 +75,60 @@ while keepPlaying:
         if event.type == pygame.QUIT:
             keepPlaying = False
 
-        if event.type == pygame.KEYDOWN:
+        if event.type == pygame.KEYDOWN and player.get_attack() == False:
             if event.key == pygame.K_LEFT:
-                face = 0
+                player.set_direction(0)
                 moveLeft = True
-                moveUp = moveDown = moveRight = False
-                x_change -= movement_speed
             if event.key == pygame.K_RIGHT:
-                face = 1
+                player.set_direction(1)
                 moveRight = True
-                moveUp = moveDown = moveLeft = False
-                x_change += movement_speed
             if event.key == pygame.K_UP:
                 moveUp = True
-                moveDown = moveRight = moveLeft = False
-                y_change -= movement_speed
             if event.key == pygame.K_DOWN:
                 moveDown = True
-                moveUp = moveRight = moveLeft = False
-                y_change += movement_speed
             if event.key == pygame.K_SPACE:
-                attack = True
-                face = 2
+                player.attack(game_border)
             
-
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT:
-                x_change = 0
                 moveLeft = False
             if event.key == pygame.K_RIGHT:
-                x_change = 0
                 moveRight = False
             if event.key == pygame.K_UP:
-                y_change = 0
                 moveUp = False
             if event.key == pygame.K_DOWN:
-                y_change = 0
                 moveDown = False
-            if event.key == pygame.K_SPACE:
-                attack = False
-                face = 0
 
+  # Walking animation
     if (index == 19):
         index = 0
     else:
         if (moveLeft or moveRight or moveUp or moveDown):
             index += 1
 
-    dog = dog_images[face][index//10]
-    if (not attack):
-        rect.move_ip(x_change, y_change)
-    rect.clamp_ip(game_border)
+    # Player movement
+    if (moveRight and player.get_attack() == False):
+      player.move_x(1, game_border)
+    if (moveLeft and player.get_attack() == False):
+      player.move_x(-1, game_border)
+    if (moveUp):
+      player.move_y(-1, game_border)
+    if (moveDown):
+      player.move_y(1, game_border)
+    
+    # draw map
     gameDisplay.blit(map, (0, 0))
-    if (attack):
-        gameDisplay.blit(dog, (rect.x, rect.y-30))
+    # draw player
+    if (player.get_attack()):
+        player.attack(game_border)
+        face = 2
+        dog = dog_images[face][index//10]
+        gameDisplay.blit(dog, (player.get_rect().x, player.get_rect().y-30))
     else:
-        gameDisplay.blit(dog, rect)
+        face = player.get_direction()
+        dog = dog_images[face][index//10]
+        gameDisplay.blit(dog, player.get_rect())
+
     pygame.display.update()
     clock.tick(60)
 
